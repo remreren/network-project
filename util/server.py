@@ -1,6 +1,6 @@
 import socket
-from request import Request
 from typing import Callable
+from util.request import Request
 
 class Server(object):
     __server: socket.socket
