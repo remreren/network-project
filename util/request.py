@@ -42,5 +42,8 @@ class Request(object):
     def get_query_params(self) -> dict:
         return self.__parser.get_query_params()
 
+    def get_query_param(self, key: str) -> object:
+        return self.__parser.get_query_params()[key]
+
     def get_body(self) -> dict:
         return self.__parser.get_body()

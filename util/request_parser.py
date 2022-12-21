@@ -3,7 +3,6 @@ import re
 import json
 
 class RequestParser(object):
-
     __method: str
     __raw_path: str
     __path: str
