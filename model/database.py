@@ -60,6 +60,11 @@ class Database(object):
         self.rooms.append(room)
         self.save()
         return True
+
+    def get_room(self, room_name: str) -> Room:
+        self.read()
+        room = next(filter(lambda rm: rm.room_name == room_name, self.rooms), None)
+        return room
     
     def remove_room(self, room_name: str) -> bool:
         self.read()
@@ -105,7 +110,7 @@ class Database(object):
         return Reservation(int(res_dct["reservation_hour"]), int(res_dct["reservation_day"]), res_dct["reservation_room"])
 
     def decode_room(self, room_dct: dict) -> Room:
-        return Room(room_dct["room_name"])
+        return Room(room_dct["room_name"], room_dct["reserved"])
 
 
 class CustomEncoder(json.JSONEncoder):
