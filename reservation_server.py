@@ -1,7 +1,9 @@
+from model.database import Database
 from util.request import Request
 from util.server import Server
 
 server = Server("localhost", 8080)
+database = Database("./database.json")
 
 def get(request: Request):
     
@@ -26,5 +28,4 @@ def routes(request: Request):
         request.send_response(500, "method not supported")
 
 server.bind_route(routes)
-
 server.listen()

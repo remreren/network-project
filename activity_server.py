@@ -1,28 +1,90 @@
 from model.database import Database, CustomEncoder
-from model.reservation import Reservation
 from util.request import Request
 from util.server import Server
-from repo.activity_repo import ActivityRepository
 from model.activity import Activity
 import json
 
 server = Server("localhost", 8082)
-database: Database = Database("./activities.json")
+database = Database("./database.json")
 
 def get(request: Request):
     
     if (request.get_path().startswith("/add")):
-        success = database.add_activity(Activity(request.get_query_param("name")))
-        request.send_response(200 if success else 403, "activity added successfully" if success else "activity already exists")
-    
-    elif (request.get_path().startswith("/getall")):
-        request.send_response(200, json.dumps({"activities": database.activities}, cls=CustomEncoder))
+        activity_name = request.get_query_param("name")
+        
+        if activity_name == None:
+            request.send_response(400, "bad request")
+            return
+
+        success = database.add_activity(Activity(activity_name))
+        if not success:
+            request.send_response(403, "activity already exists")
+            return
+
+        request.send_response(200, "activity added successfully")
+        return
 
     elif (request.get_path().startswith("/remove")):
-        request.send_response(200, "activity removed")
-    
+        activity_name = request.get_query_param("name")
+        
+        if activity_name == None:
+            request.send_response(400, "bad request")
+            return
+
+        success = database.remove_activity(Activity(activity_name))
+        if not success:
+            request.send_response(403, "activity does not exists")
+            return
+
+        request.send_response(200, "activity removed successfully")
+        return
+
     elif (request.get_path().startswith("/check")):
         request.send_response(200, "activity")
+    
+    elif (request.get_path().startswith("/getall")):
+        request.send_response(200, json.dumps({"activities": database.get_activities()}, cls=CustomEncoder))
+    
+    else:
+        request.send_response(500, "route error")
+
+def post(request: Request):
+    
+    if (request.get_path().startswith("/add")):
+        activity_name = request.get_body()["name"]
+        
+        if activity_name == None:
+            request.send_response(400, "bad request")
+            return
+
+        success = database.add_activity(Activity(activity_name))
+        if not success:
+            request.send_response(403, "activity already exists")
+            return
+
+        request.send_response(200, "activity added successfully")
+        return
+
+    elif (request.get_path().startswith("/remove")):
+        activity_name = request.get_body()["name"]
+        
+        if activity_name == None:
+            request.send_response(400, "bad request")
+            return
+
+        success = database.remove_activity(Activity(activity_name))
+        if not success:
+            request.send_response(403, "activity does not exists")
+            return
+
+        request.send_response(200, "activity removed successfully")
+        return
+
+    elif (request.get_path().startswith("/check")):
+        request.send_response(200, "activity")
+    
+    elif (request.get_path().startswith("/getall")):
+        request.send_response(200, json.dumps({"activities": database.get_activities()}, cls=CustomEncoder))
     
     else:
         request.send_response(500, "route error")
@@ -31,6 +93,9 @@ def routes(request: Request):
 
     if (request.get_method() == "GET"):
         get(request)
+
+    elif (request.get_method() == "POST"):
+        post(request)
 
     else:
         request.send_response(500, "method not supported")
