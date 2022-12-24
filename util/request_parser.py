@@ -19,8 +19,6 @@ class RequestParser(object):
         self.__query_params = query_params
         self.__body = body
 
-        pass
-
     # returns method, path, query_params and body respectively
     def __parse_request(self, request: str) -> Tuple[str, str, dict, dict]:
         headers, body_str = re.split("\r\n\r\n", request)

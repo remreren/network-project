@@ -1,5 +1,4 @@
 from model.database import Database, CustomEncoder
-from util.request import Request
 from util.server import Server
 from model.activity import Activity
 import json
@@ -56,6 +55,14 @@ def remove_activity(query_params: dict, body: dict) -> tuple[int, str]:
     return (200, "activity removed successfully")
 
 def check_activity(query_params: dict, body: dict) -> tuple[int, str]:
+    activity_name = query_params.get("name")
+
+    if activity_name == None:
+        return (400, "bad request")
+    
+    if database.get_activity(activity_name) == None:
+        return (403, "activity not found")
+    
     return (200, "activity")
 
 def get_all_activities(query_params: dict, body: dict) -> tuple[int, str]:

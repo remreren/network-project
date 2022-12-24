@@ -29,6 +29,10 @@ class Database(object):
         self.save()
         return True
 
+    def get_activity(self, activity_name: str) -> Activity:
+        self.read()
+        return next(map(lambda act: act.activity_name, self.activities), None)
+
     def remove_activity(self, activity_name: str) -> bool:
         self.read()
 
