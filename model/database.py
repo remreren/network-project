@@ -65,6 +65,19 @@ class Database(object):
         self.read()
         room = next(filter(lambda rm: rm.room_name == room_name, self.rooms), None)
         return room
+
+    def reserve_room(self, room_name: str, day: int, hour: int, duration: int) -> bool:
+        self.read()
+        room = next(filter(lambda rm: rm.room_name == room_name, self.rooms), None)
+        room_idx = self.rooms.index(room)
+
+        if room == None:
+            return False
+
+        room.reserve(day, hour, duration)
+        self.rooms[room_idx] = room
+        
+        self.save()
     
     def remove_room(self, room_name: str) -> bool:
         self.read()
