@@ -76,7 +76,7 @@ class Database(object):
 
         room.reserve(day, hour, duration)
         self.rooms[room_idx] = room
-        
+
         self.save()
     
     def remove_room(self, room_name: str) -> bool:
@@ -96,7 +96,7 @@ class Database(object):
 
     def get_rooms(self) -> List[Room]:
         self.read()
-        return self.activities
+        return self.rooms
 
     def save(self) -> bool:
         with open(self.__file_path, "w+") as fl:

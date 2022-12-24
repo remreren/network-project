@@ -1,101 +1,83 @@
 import json
 from model.database import CustomEncoder, Database
 from model.room import Room
-from util.request import Request
 from util.server import Server
 
 server = Server("localhost", 8081)
 database = Database("./database.json")
 
-def get(request: Request):
-
-    if (request.get_path().startswith("/add")):
-        room_name = request.get_query_param("name")
-        if room_name == None:
-            request.send_response(400, "invalid request")
-            return
-           
-        success = database.add_room(Room(room_name))
-        if not success:
-            request.send_response(403, f"room already exits with name {room_name}")
-            return
-
-        request.send_response(200, "new room added successfully")
-        return
-    
-    elif (request.get_path().startswith("/remove")):
-        room_name = request.get_query_param("name")
-        if room_name == None:
-            request.send_response(400, "invalid request")
-            return
-           
-        success = database.remove_room(room_name)
-        if not success:
-            request.send_response(403, f"room cannot be found with name {room_name}")
-            return
-
-        request.send_response(200, "room deleted successfully")
-        return
-
-    elif (request.get_path().startswith("/reserve")):
-        # name, day, hour, duration required
-        room_name = request.get_query_param("name")
-        day = int(request.get_query_param("day"))
-        hour = int(request.get_query_param("hour"))
-        duration = int(request.get_query_param("duration"))
-
-        if room_name == None:
-            request.send_response(400, "bad request")
-            return
+def add_room(query_params: dict, body: dict) -> tuple[int, str]:
+    room_name = query_params.get("name")
+    if room_name == None:
+        return (400, "invalid request")
         
-        room = database.get_room(room_name)
-        available = room.is_available(day, hour, duration)
+    success = database.add_room(Room(room_name))
+    if not success:
+        return (403, f"room already exits with name {room_name}")
 
-        if not available:
-            request.send_response(403, "not available")
-            return
+    return (200, "new room added successfully")
 
-        success = database.reserve_room(day, hour, duration)
-        if not success:
-            request.send_response(403, "reservation not done")
-            return
-
-        request.send_response(200, "reserved successfully")
-        return
-    
-    elif (request.get_path().startswith("/checkavailability")):
-        room_name = request.get_query_param("name")
-        day = int(request.get_query_param("day"))
-        hour = int(request.get_query_param("hour"))
-        duration = int(request.get_query_param("duration"))
-
-        if room_name == None:
-            request.send_response(400, "bad request")
-            return
+def remove_room(query_params: dict, body: dict) -> tuple[int, str]:
+    room_name = query_params.get("name")
+    if room_name == None:
+        return (400, "invalid request")
         
-        room = database.get_room(room_name)
-        available = room.is_available(day, hour, duration)
+    success = database.remove_room(room_name)
+    if not success:
+        return (403, f"room cannot be found with name {room_name}")
 
-        if not available:
-            request.send_response(403, "not available")
-            return
+    return (200, "room deleted successfully")
 
-        request.send_response(200, "available")
-        return
+def reserve_room(query_params: dict, body: dict) -> tuple[int, str]:
+    room_name = query_params.get("name")
+    day = int(query_params.get("day"))
+    hour = int(query_params.get("hour"))
+    duration = int(query_params.get("duration"))
+
+    if room_name == None:
+        return (400, "bad request")
     
-    elif (request.get_path().startswith("/getall")):
-        request.send_response(200, json.dumps({"rooms": database.get_rooms()}, cls=CustomEncoder))
+    room = database.get_room(room_name)
+    available = room.is_available(day, hour, duration)
+
+    if not available:
+        return (403, "not available")
+
+    success = database.reserve_room(day, hour, duration)
+    if not success:
+        return (403, "reservation not done")
+
+    return (200, "reserved successfully")
+
+def check_availability(query_params: dict, body: dict) -> tuple[int, str]:
+    room_name = query_params.get("name")
+    day = int(query_params.get("day"))
+    hour = int(query_params.get("hour"))
+    duration = int(query_params.get("duration"))
+
+    if room_name == None:
+        return (400, "bad request")
     
-    else:
-        request.send_response(500, "route error")
+    room = database.get_room(room_name)
+    available = room.is_available(day, hour, duration)
 
-def routes(request: Request):
-    
-    if (request.get_method() == "GET"):
-        get(request)
+    if not available:
+        return (403, "not available")
 
-    else:
-        request.send_response(500, "method not supported")
+    return (200, "available")
 
-server.bind_route(routes)
+def get_all(query_params: dict, body: dict) -> tuple[int, str]:
+    return (200, json.dumps({"rooms": database.get_rooms()}, cls=CustomEncoder))
+
+def error(path: str, method: str) -> tuple[int, str]:
+    return (500, f"path {path} with method {method} cannot be found")
+
+server.bind_path("GET", "/add", add_room)
+server.bind_path("GET", "/remove", remove_room)
+server.bind_path("GET", "/reserve", reserve_room)
+server.bind_path("GET", "/checkavailability", check_availability)
+server.bind_path("GET", "/getall", get_all)
+
+server.error_path(error)
+
 server.listen()

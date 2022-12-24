@@ -7,100 +7,74 @@ import json
 server = Server("localhost", 8082)
 database = Database("./database.json")
 
-def get(request: Request):
-    
-    if (request.get_path().startswith("/add")):
-        activity_name = request.get_query_param("name")
+def add_activity_post(query_params: dict, body: dict) -> tuple[int, str]:
+    activity_name = body.get("name")
         
-        if activity_name == None:
-            request.send_response(400, "bad request")
-            return
+    if activity_name == None:
+        return (400, "bad request")
 
-        success = database.add_activity(Activity(activity_name))
-        if not success:
-            request.send_response(403, "activity already exists")
-            return
+    success = database.add_activity(Activity(activity_name))
+    if not success:
+        return (403, "activity already exists")
 
-        request.send_response(200, "activity added successfully")
-        return
+    return (200, "activity added successfully")
 
-    elif (request.get_path().startswith("/remove")):
-        activity_name = request.get_query_param("name")
-        
-        if activity_name == None:
-            request.send_response(400, "bad request")
-            return
-
-        success = database.remove_activity(Activity(activity_name))
-        if not success:
-            request.send_response(403, "activity does not exists")
-            return
-
-        request.send_response(200, "activity removed successfully")
-        return
-
-    elif (request.get_path().startswith("/check")):
-        request.send_response(200, "activity")
+def remove_activity_post(query_params: dict, body: dict) -> tuple[int, str]:
+    activity_name = body.get("name")
     
-    elif (request.get_path().startswith("/getall")):
-        request.send_response(200, json.dumps({"activities": database.get_activities()}, cls=CustomEncoder))
+    if activity_name == None:
+        return (400, "bad request")
+
+    success = database.remove_activity(Activity(activity_name))
+    if not success:
+        return (403, "activity does not exists")
+
+    return (200, "activity removed successfully")
+
+def add_activity(query_params: dict, body: dict) -> tuple[int, str]:
+    activity_name = query_params.get("name")
     
-    else:
-        request.send_response(500, "route error")
+    if activity_name == None:
+        return (400, "bad request")
 
-def post(request: Request):
+    success = database.add_activity(Activity(activity_name))
+    if not success:
+        return (403, "activity already exists")
+
+    return (200, "activity added successfully")
+
+def remove_activity(query_params: dict, body: dict) -> tuple[int, str]:
+    activity_name = query_params.get("name")
     
-    if (request.get_path().startswith("/add")):
-        activity_name = request.get_body()["name"]
-        
-        if activity_name == None:
-            request.send_response(400, "bad request")
-            return
+    if activity_name == None:
+        return (400, "bad request")
 
-        success = database.add_activity(Activity(activity_name))
-        if not success:
-            request.send_response(403, "activity already exists")
-            return
+    success = database.remove_activity(Activity(activity_name))
+    if not success:
+        return (403, "activity does not exists")
 
-        request.send_response(200, "activity added successfully")
-        return
+    return (200, "activity removed successfully")
 
-    elif (request.get_path().startswith("/remove")):
-        activity_name = request.get_body()["name"]
-        
-        if activity_name == None:
-            request.send_response(400, "bad request")
-            return
+def check_activity(query_params: dict, body: dict) -> tuple[int, str]:
+    return (200, "activity")
 
-        success = database.remove_activity(Activity(activity_name))
-        if not success:
-            request.send_response(403, "activity does not exists")
-            return
+def get_all_activities(query_params: dict, body: dict) -> tuple[int, str]:
+    return (200, json.dumps({"activities": database.get_activities()}, cls=CustomEncoder))
 
-        request.send_response(200, "activity removed successfully")
-        return
+def error(path: str, method: str) -> tuple[int, str]:
+    return (500, f"path {path} with method {method} cannot be found")
 
-    elif (request.get_path().startswith("/check")):
-        request.send_response(200, "activity")
-    
-    elif (request.get_path().startswith("/getall")):
-        request.send_response(200, json.dumps({"activities": database.get_activities()}, cls=CustomEncoder))
-    
-    else:
-        request.send_response(500, "route error")
+server.bind_path("GET", "/add", add_activity)
+server.bind_path("GET", "/remove", remove_activity)
+server.bind_path("GET", "/check", check_activity)
+server.bind_path("GET", "/getall", get_all_activities)
 
-def routes(request: Request):
+server.bind_path("POST", "/add", add_activity_post)
+server.bind_path("POST", "/remove", remove_activity_post)
+server.bind_path("POST", "/getall", get_all_activities)
 
-    if (request.get_method() == "GET"):
-        get(request)
+server.error_path(error)
 
-    elif (request.get_method() == "POST"):
-        post(request)
-
-    else:
-        request.send_response(500, "method not supported")
-
-server.bind_route(routes)
 server.listen()
 
 
