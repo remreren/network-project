@@ -55,6 +55,11 @@ class Database(object):
         self.save()
         return True
 
+    def get_reservation(self, reservation_id: str) -> Reservation:
+        self.read()
+        reservation = next(filter(lambda res: res.reservation_id == reservation_id, self.reservations), None)
+        return reservation
+
     def add_room(self, room: Room) -> bool:
         self.read()
 
@@ -80,8 +85,8 @@ class Database(object):
 
         room.reserve(day, hour, duration)
         self.rooms[room_idx] = room
-
         self.save()
+        return True
     
     def remove_room(self, room_name: str) -> bool:
         self.read()
@@ -124,7 +129,7 @@ class Database(object):
         return Activity(act_dct["activity_name"])
 
     def decode_reservation(self, res_dct: dict) -> Reservation:
-        return Reservation(int(res_dct["reservation_hour"]), int(res_dct["reservation_day"]), res_dct["reservation_room"])
+        return Reservation(res_dct["reservation_id"], int(res_dct["reservation_hour"]), int(res_dct["reservation_day"]), res_dct["reservation_room"])
 
     def decode_room(self, room_dct: dict) -> Room:
         return Room(room_dct["room_name"], room_dct["reserved"])

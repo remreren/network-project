@@ -44,7 +44,7 @@ def reserve_room(query_params: dict, body: dict) -> tuple[int, str]:
     if not available:
         return (403, "not available")
 
-    success = database.reserve_room(day, hour, duration)
+    success = database.reserve_room(room_name, day, hour, duration)
     if not success:
         return (403, "reservation not done")
 

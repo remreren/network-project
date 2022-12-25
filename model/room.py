@@ -38,7 +38,10 @@ class Room(object):
         if not self.is_available(day, hour, duration):
             return False
         
-        already_reserved = self.reserved[day]
+        already_reserved = self.reserved.get(day)
+        if already_reserved == None:
+            already_reserved = []
+
         needed_hours = range(hour, hour + duration)
         self.reserved[day] = list(set(already_reserved).union(set(needed_hours)))
 
