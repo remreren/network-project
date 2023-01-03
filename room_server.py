@@ -10,24 +10,24 @@ database = Database("./database.json")
 def add_room(query_params: dict, body: dict) -> tuple[int, str]:
     room_name = query_params.get("name")
     if room_name == None:
-        return (400, "invalid request")
+        return create_response(400, "Error", "Invalid request")
         
     success = database.add_room(Room(room_name))
     if not success:
-        return (403, f"room already exits with name {room_name}")
+        return create_response(403, "Error", f"room already exits with name {room_name}")
 
-    return (200, "new room added successfully")
+    return create_response(200, "Room added", "New room added successfully")
 
 def remove_room(query_params: dict, body: dict) -> tuple[int, str]:
     room_name = query_params.get("name")
     if room_name == None:
-        return (400, "invalid request")
+        return create_response(400, "Error", "Invalid request")
         
     success = database.remove_room(room_name)
     if not success:
-        return (403, f"room cannot be found with name {room_name}")
+        return create_response(403, "Error", f"room cannot be found with name {room_name}")
 
-    return (200, "room deleted successfully")
+    return create_response(200, "Delete room", "Room deleted successfully")
 
 def reserve_room(query_params: dict, body: dict) -> tuple[int, str]:
     room_name = query_params.get("name")
@@ -36,19 +36,19 @@ def reserve_room(query_params: dict, body: dict) -> tuple[int, str]:
     duration = int(query_params.get("duration"))
 
     if room_name == None:
-        return (400, "bad request")
+        return create_response(400, "Error", "Bad request")
     
     room = database.get_room(room_name)
     available = room.is_available(day, hour, duration)
 
     if not available:
-        return (403, "not available")
+        return create_response(403, "Error", "Not available")
 
     success = database.reserve_room(room_name, day, hour, duration)
     if not success:
-        return (403, "reservation not done")
+        return create_response(403, "Error", "Reservation not done")
 
-    return (200, "reserved successfully")
+    return create_response(200, "Reserve room", "Reserved successfully")
 
 def check_availability(query_params: dict, body: dict) -> tuple[int, str]:
     room_name = query_params.get("name")
@@ -77,7 +77,7 @@ def check_availability(query_params: dict, body: dict) -> tuple[int, str]:
         if len(availabilities_widx) == 0:
             return create_response(403, "Error", "No availability for the room")
 
-        return create_response(200, "Room availabilities", )
+        return create_response(200, "Room availabilities", availabilities_final)
 
 def get_all(query_params: dict, body: dict) -> tuple[int, str]:
     return (200, json.dumps({"rooms": database.get_rooms()}, cls=CustomEncoder))
